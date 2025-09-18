@@ -1,4 +1,4 @@
-name: RECOVERY.mybutthurts
+name: RECOVERY.sdibyt
 
 on:
   workflow_dispatch:
@@ -6,7 +6,6 @@ on:
       RECOVERY_URL:
         description: 'RECOVERY URL (supports MEGA, transfer.sh, oshi.at, etc.)'
         required: true
-        default: 'https://transfer.sh/(RECOMMENDED)'
 
 jobs:
   build:
@@ -20,8 +19,12 @@ jobs:
       run: |
         sudo apt update
         sudo apt install -y git wget lz4 tar openssl python3 megatools
+        # Make magiskboot executable
         chmod +x "$GITHUB_WORKSPACE/magiskboot"
-        echo "$GITHUB_WORKSPACE" >> $GITHUB_PATH
+        # Symlink into /usr/local/bin so it's always available
+        sudo ln -sf "$GITHUB_WORKSPACE/magiskboot" /usr/local/bin/magiskboot
+        which magiskboot
+        magiskboot --help || true
 
     - name: Fetch recovery image
       run: |
@@ -32,25 +35,21 @@ jobs:
         else
           wget -O RECOVERY.new "$URL"
         fi
-        # Make a predictable filename for scripts that expect recovery.img
         cp -f RECOVERY.new recovery.img
-        ls -lah recovery.img
+        ls -lh recovery.img
 
     - name: Make scripts executable
       run: |
-        chmod +x "$GITHUB_WORKSPACE/script1.sh" || true
-        chmod +x "$GITHUB_WORKSPACE/script2.sh" || true
+        chmod +x script1.sh || true
+        chmod +x script2.sh || true
 
     - name: Patch Process-1
-      run: |
-        cd "$GITHUB_WORKSPACE"
-        ./script1.sh || true
+      run: ./script1.sh || true
 
     - name: Patch Process-2
       run: |
-        cd "$GITHUB_WORKSPACE"
-        # Make script2 use full magiskboot path so it always finds it
-        sed -i "s|magiskboot|$GITHUB_WORKSPACE/magiskboot|g" script2.sh || true
+        # Ensure script2 uses absolute path if needed
+        sed -i "s|magiskboot|/usr/local/bin/magiskboot|g" script2.sh || true
         ./script2.sh || true
 
         python3 avbtool extract_public_key --key phh.pem --output phh.pub.bin
@@ -71,4 +70,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: Patched-Recovery
-        path: output/*.md5
+        path: output/*
