@@ -15,16 +15,22 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
 
-    - name: Prepare environment
+       - name: Prepare environment
       run: |
         sudo apt update
         sudo apt install -y git wget lz4 tar openssl python3 megatools
         # Make magiskboot executable
         chmod +x "$GITHUB_WORKSPACE/magiskboot"
-        # Symlink into /usr/local/bin so it's always available
+        # Copy into repo root so ./magiskboot works
+        cp "$GITHUB_WORKSPACE/magiskboot" "$GITHUB_WORKSPACE/./magiskboot"
+        # Also symlink to global PATH
         sudo ln -sf "$GITHUB_WORKSPACE/magiskboot" /usr/local/bin/magiskboot
+        echo "Magiskboot path test:"
+        ls -l "$GITHUB_WORKSPACE/magiskboot"
+        "$GITHUB_WORKSPACE/magiskboot" --help || true
         which magiskboot
         magiskboot --help || true
+e
 
     - name: Fetch recovery image
       run: |
