@@ -1,4 +1,4 @@
-name: RECOVERY.new
+name: RECOVERY.goon
 
 on:
   workflow_dispatch:
@@ -30,7 +30,6 @@ jobs:
         if [[ "$URL" == *"mega.nz"* ]]; then
           echo "Downloading from MEGA..."
           python3 - <<'EOF'
-import sys
 from mega import Mega
 m = Mega()
 m.download_url("${{ github.event.inputs.RECOVERY_URL }}", 'RECOVERY.new')
